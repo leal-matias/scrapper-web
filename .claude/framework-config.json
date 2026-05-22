@@ -1,0 +1,34 @@
+{
+  "version": "1.0.0",
+  "schema_version": "1.0.0",
+  "framework_version": "1.0.0",
+  "project_metadata": {
+    "project_path": "/Users/mleal/repositories/personal/scrapper-web",
+    "last_analysis": "2026-05-22T18:48:22.007Z",
+    "initialization_hash": "mph9vz7bx259n9ktm6"
+  },
+  "stack_profile": {
+    "services": [
+      {
+        "id": "scrapper-web",
+        "path": ".",
+        "type": "backend",
+        "language": "unknown",
+        "frameworks": {},
+        "file_count": 1,
+        "manifest_file": "README.md"
+      }
+    ],
+    "is_monorepo": false,
+    "workspace_tool": "none",
+    "file_counts": {
+      "total": 0,
+      "by_language": {}
+    }
+  },
+  "resource_state": {
+    "skills": {},
+    "agents": {},
+    "last_sync": "2026-05-22T18:48:22.007Z"
+  }
+}

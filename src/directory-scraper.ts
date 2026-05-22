@@ -5,7 +5,7 @@
 
 import { chromium } from 'playwright';
 import LLMScraper from 'llm-scraper';
-import { anthropic } from '@ai-sdk/anthropic';
+import { createOpenAI } from '@ai-sdk/openai';
 import { Output } from 'ai';
 import { z } from 'zod';
 import type { Business } from './types.js';
@@ -32,7 +32,11 @@ export async function findBusinessesByRubro(
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
   });
 
-  const llm = new LLMScraper(anthropic('claude-sonnet-4-5'));
+  const groq = createOpenAI({
+    baseURL: 'https://api.groq.com/openai/v1',
+    apiKey: process.env.GROQ_API_KEY,
+  });
+  const llm = new LLMScraper(groq('llama-3.3-70b-versatile'));
 
   const allBusinesses: Business[] = [];
 

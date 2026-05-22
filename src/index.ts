@@ -33,8 +33,8 @@ function parseArgs(): { rubro: string; max: number; out: string } {
 }
 
 async function main() {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.error('Error: ANTHROPIC_API_KEY environment variable is required');
+  if (!process.env.GROQ_API_KEY) {
+    console.error('Error: GROQ_API_KEY environment variable is required');
     process.exit(1);
   }
 

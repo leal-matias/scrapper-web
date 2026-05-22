@@ -4,7 +4,7 @@
 
 import { Page, BrowserContext } from 'playwright';
 import LLMScraper from 'llm-scraper';
-import { anthropic } from '@ai-sdk/anthropic';
+import { createOpenAI } from '@ai-sdk/openai';
 import { Output } from 'ai';
 import { z } from 'zod';
 import type { Business, ContactInfo } from './types.js';
@@ -18,7 +18,11 @@ const contactSchema = z.object({
     .describe('All phone numbers found, including WhatsApp numbers'),
 });
 
-const llm = new LLMScraper(anthropic('claude-sonnet-4-5'));
+const groq = createOpenAI({
+  baseURL: 'https://api.groq.com/openai/v1',
+  apiKey: process.env.GROQ_API_KEY,
+});
+const llm = new LLMScraper(groq('llama-3.3-70b-versatile'));
 
 async function scrapeContactFromPage(
   page: Page,
