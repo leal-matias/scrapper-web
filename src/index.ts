@@ -2,10 +2,11 @@
  * scrapper-web — CLI entry point
  *
  * Usage:
- *   ANTHROPIC_API_KEY=sk-... npm run dev -- --rubro "opticas" --max 20
- *   ANTHROPIC_API_KEY=sk-... npm run dev -- --rubro "veterinarias" --max 10 --out ./results
+ *   npm run dev -- --rubro "opticas" --max 20
+ *   npm run dev -- --rubro "veterinarias" --max 10 --out ./results
  */
 
+import 'dotenv/config';
 import { chromium } from 'playwright';
 import { findBusinessesByRubro } from './directory-scraper.js';
 import { scrapeContactInfo } from './contact-scraper.js';
