@@ -1,0 +1,14 @@
+# AI Agentic Framework files
+.claude-temp/
+.codex-temp/
+.claude-backups/
+.codex-backups/
+qubika-agentic-framework/
+
+# Node.js
+node_modules/
+dist/
+.env
+
+# Scraper output
+output/
