@@ -34,8 +34,9 @@ function parseArgs(): { rubro: string; max: number; out: string } {
 }
 
 async function main() {
-  if (!process.env.GROQ_API_KEY) {
-    console.error('Error: GROQ_API_KEY environment variable is required');
+  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    console.error('Error: GOOGLE_GENERATIVE_AI_API_KEY environment variable is required');
+    console.error('Get your free key at https://aistudio.google.com/app/apikey');
     process.exit(1);
   }
 

@@ -1,32 +1,25 @@
 /**
- * Finds Uruguayan businesses by rubro using Google Search.
+ * Finds Uruguayan businesses by rubro using DuckDuckGo.
+ * No LLM needed here — plain Playwright extracts the result links directly.
  */
 
 import { chromium } from 'playwright';
-import LLMScraper from 'llm-scraper';
-import { createOpenAI } from '@ai-sdk/openai';
-import { Output } from 'ai';
-import { z } from 'zod';
 import type { Business } from './types.js';
-
-const searchResultsSchema = z.object({
-  results: z.array(
-    z.object({
-      title: z.string().describe('Page or business title'),
-      url: z.string().describe('Full URL of the result'),
-    })
-  ),
-});
 
 // Domains that are not real business homepages
 const SKIP_DOMAINS = [
   'google.', 'youtube.', 'facebook.', 'wikipedia.', 'twitter.',
-  'tiktok.', 'instagram.', 'linkedin.', 'tripadvisor.',
-  'maps.google', 'support.google', 'accounts.google',
+  'tiktok.', 'instagram.', 'linkedin.', 'tripadvisor.', 'yelp.',
+  'duckduckgo.', 'bing.', 'yahoo.', 'mercadolibre.', 'infobae.',
+  'eldiariony.', 'clarin.', 'lanacion.',
 ];
 
 function isUsableUrl(url: string): boolean {
   return url.startsWith('http') && !SKIP_DOMAINS.some((d) => url.includes(d));
+}
+
+function domainToName(url: string): string {
+  return new URL(url).hostname.replace(/^www\./, '');
 }
 
 export async function findBusinessesByRubro(
@@ -40,15 +33,8 @@ export async function findBusinessesByRubro(
     locale: 'es-UY',
   });
 
-  const groq = createOpenAI({
-    baseURL: 'https://api.groq.com/openai/v1',
-    apiKey: process.env.GROQ_API_KEY,
-  });
-  const llm = new LLMScraper(groq('llama-3.3-70b-versatile'));
+  const urls = new Set<string>();
 
-  const urls: string[] = [];
-
-  // Two searches to get more coverage
   const queries = [
     `${rubro} Uruguay`,
     `${rubro} Montevideo contacto`,
@@ -56,36 +42,35 @@ export async function findBusinessesByRubro(
 
   try {
     for (const query of queries) {
-      if (urls.length >= maxResults) break;
+      if (urls.size >= maxResults) break;
 
       const page = await context.newPage();
-      const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&gl=uy&hl=es&num=20`;
-      console.log(`[directory] Searching: "${query}"`);
+      const searchUrl = `https://duckduckgo.com/?q=${encodeURIComponent(query)}&kl=uy-es`;
+      console.log(`[directory] DuckDuckGo: "${query}"`);
 
       try {
         await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-        await page.waitForTimeout(1500);
+        await page.waitForTimeout(2000);
 
-        const { data } = await llm.run(
-          page,
-          Output.object({ schema: searchResultsSchema }),
-          {
-            format: 'html',
-            system: `Extract all organic search result links from this Google search page.
-Return the title and full URL of each result.
-Skip ads, Google internal pages, and generic platforms (Facebook, Instagram, YouTube, TikTok, Wikipedia, LinkedIn).
-Only keep real business websites.`,
-          }
-        );
+        // DuckDuckGo renders results as <a> tags with data-testid="result-title-a"
+        // Fallback: grab any <a> with an href that looks like a real site
+        const links = await page.evaluate(() => {
+          const anchors = Array.from(
+            document.querySelectorAll('[data-testid="result-title-a"], .result__a')
+          );
+          return anchors
+            .map((a) => (a as HTMLAnchorElement).href)
+            .filter((h) => h.startsWith('http'));
+        });
 
-        if (data?.results) {
-          for (const r of data.results) {
-            if (isUsableUrl(r.url) && !urls.includes(r.url)) {
-              urls.push(r.url);
-            }
+        let added = 0;
+        for (const link of links) {
+          if (isUsableUrl(link) && !urls.has(link)) {
+            urls.add(link);
+            added++;
           }
-          console.log(`[directory] Got ${urls.length} business URLs so far`);
         }
+        console.log(`[directory] +${added} URLs (total: ${urls.size})`);
       } catch (err) {
         console.warn(`[directory] Search failed:`, (err as Error).message);
       } finally {
@@ -97,9 +82,7 @@ Only keep real business websites.`,
     await browser.close();
   }
 
-  // Convert URLs to Business objects — name is derived from the domain
-  return urls.slice(0, maxResults).map((url) => ({
-    name: new URL(url).hostname.replace('www.', ''),
-    website: url,
-  }));
+  return Array.from(urls)
+    .slice(0, maxResults)
+    .map((url) => ({ name: domainToName(url), website: url }));
 }
